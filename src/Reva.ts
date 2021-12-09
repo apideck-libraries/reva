@@ -68,7 +68,8 @@ export class Reva {
         ?.filter((param): param is OpenAPIV3.ParameterObject => 'in' in param)
         .reduce<SchemaByType>((schemaMap, param) => {
           const schema = (param.schema ??
-            param.content?.['application/json']?.schema) as OpenAPIV3.SchemaObject;
+            param.content?.['application/json']
+              ?.schema) as OpenAPIV3.SchemaObject;
           if (!schema) return schemaMap;
 
           if (!schemaMap[param.in]) {
@@ -99,7 +100,7 @@ export class Reva {
 
     const safeHeaders = lowercaseKeys(headers ?? {});
 
-    const validationEntries = OPENAPI_PARAMETER_TYPES.map(type => {
+    const validationEntries = OPENAPI_PARAMETER_TYPES.map((type) => {
       const schema = schemaByType[type];
       if (!schema) return null;
 
@@ -109,7 +110,9 @@ export class Reva {
         case 'header':
           value = Object.fromEntries(
             Object.entries(safeHeaders).map(([key, value]) => {
-              const headerSchema = schema.properties?.[key] as OpenAPIV3.SchemaObject;
+              const headerSchema = schema.properties?.[
+                key
+              ] as OpenAPIV3.SchemaObject;
               if (headerSchema?.type === 'object') {
                 return [key, tryJsonParse(value as string) ?? {}];
               }

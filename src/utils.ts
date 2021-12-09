@@ -31,27 +31,35 @@ export const parseCookies = (
 export const parseContentType = (
   contentType: string
 ): { mediaType: string; parameters: Record<string, string> } => {
-  const [mediaType, ...parts] = contentType.split(';').map(part => part.trim());
-  const parameters = Object.fromEntries(parts.map(part => part.split('=')));
+  const [mediaType, ...parts] = contentType
+    .split(';')
+    .map((part) => part.trim());
+  const parameters = Object.fromEntries(parts.map((part) => part.split('=')));
 
   return { mediaType, parameters };
 };
 
-export const removeReadOnlyProperties = (schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject => {
+export const removeReadOnlyProperties = (
+  schema: OpenAPIV3.SchemaObject
+): OpenAPIV3.SchemaObject => {
   if (!schema.properties) {
     return schema;
   }
 
-  schema.required = schema.required?.filter(field => {
+  schema.required = schema.required?.filter((field) => {
     const prop = schema.properties?.[field];
-    return !(typeof prop === 'object' && (prop as OpenAPIV3.SchemaObject).readOnly);
+    return !(
+      typeof prop === 'object' && (prop as OpenAPIV3.SchemaObject).readOnly
+    );
   });
 
   schema.properties = Object.fromEntries(
     Object.entries(schema.properties)
       .map(([key, value]) => [
         key,
-        typeof value === 'object' && (value as OpenAPIV3.SchemaObject).readOnly ? null : value,
+        typeof value === 'object' && (value as OpenAPIV3.SchemaObject).readOnly
+          ? null
+          : value,
       ])
       .filter(([, value]) => value !== null)
   ) as Record<string, OpenAPIV3.SchemaObject>;
