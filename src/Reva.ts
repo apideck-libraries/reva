@@ -1,0 +1,257 @@
+import Ajv from 'ajv';
+import { JSONSchema7 } from 'json-schema';
+import { OpenAPIV3 } from 'openapi-types';
+import { betterAjvErrors, ValidationError } from '@apideck/better-ajv-errors';
+import {
+  lowercaseKeys,
+  parseContentType,
+  parseCookies,
+  removeReadOnlyProperties,
+  tryJsonParse,
+} from './utils';
+
+type Result<E> = { ok: true } | { ok: false; errors: E[] };
+type Optional<T> = T | null | undefined;
+type ParameterDictionary = Record<string, Optional<string>>;
+type SchemaByType = Record<string, JSONSchema7>;
+
+const OPENAPI_PARAMETER_TYPES = ['header', 'path', 'query', 'cookie'] as const;
+type OpenApiParameterType = typeof OPENAPI_PARAMETER_TYPES[number];
+
+export interface RevaRequest {
+  queryParameters?: ParameterDictionary;
+  pathParameters?: ParameterDictionary;
+  headers?: ParameterDictionary;
+  body?: unknown;
+}
+
+interface OpenApiOperation {
+  parameters?: OpenAPIV3.ParameterObject[];
+  requestBody?: OpenAPIV3.RequestBodyObject;
+  [key: string]: unknown;
+}
+
+export interface RevaOptions {
+  allowAdditionalParameters: true | OpenApiParameterType[];
+  groupedParameters: OpenApiParameterType[];
+  partialBody: boolean;
+}
+
+export interface RevaValidateOptions {
+  operation: OpenApiOperation;
+  request: RevaRequest;
+  options?: Partial<RevaOptions>;
+}
+
+export class Reva {
+  private paramAjv = new Ajv({ allErrors: true, coerceTypes: true });
+  private bodyAjv = new Ajv({ allErrors: true });
+  private options: RevaOptions = {
+    allowAdditionalParameters: ['header', 'cookie'],
+    groupedParameters: [],
+    partialBody: false,
+  };
+
+  constructor(options: Partial<RevaOptions> = {}) {
+    this.options = { ...this.options, ...options };
+  }
+
+  validate({
+    operation,
+    request: { body, headers, pathParameters, queryParameters },
+    options: validateOptions = {},
+  }: RevaValidateOptions): Result<ValidationError> {
+    const options = { ...this.options, ...validateOptions };
+
+    const schemaByType =
+      operation.parameters
+        ?.filter((param): param is OpenAPIV3.ParameterObject => 'in' in param)
+        .reduce<SchemaByType>((schemaMap, param) => {
+          const schema = (param.schema ??
+            param.content?.['application/json']?.schema) as JSONSchema7;
+          if (!schema) return schemaMap;
+
+          if (!schemaMap[param.in]) {
+            schemaMap[param.in] = {
+              type: 'object',
+              required: [],
+              properties: {},
+              additionalProperties:
+                options.allowAdditionalParameters === true ||
+                options.allowAdditionalParameters.includes(
+                  param.in as OpenApiParameterType
+                ), // Additional headers are allowed, additional query/path params are not
+            };
+          }
+
+          // properties is always assigned above
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          schemaMap[param.in].properties![param.name] = schema;
+
+          if (param.required) {
+            schemaMap[param.in].required?.push(param.name);
+          }
+
+          return schemaMap;
+        }, {}) ?? {};
+
+    const safeHeaders = lowercaseKeys(headers ?? {});
+
+    const validationEntries = OPENAPI_PARAMETER_TYPES.map(type => {
+      const schema = schemaByType[type];
+      let value: Record<string, unknown> = {};
+
+      switch (type) {
+        case 'header':
+          value = Object.fromEntries(
+            Object.entries(safeHeaders).map(([key, value]) => {
+              const headerSchema = schema.properties?.[key] as JSONSchema7;
+              if (headerSchema?.type === 'object') {
+                return [key, tryJsonParse(value as string) ?? {}];
+              }
+              return [key, value];
+            })
+          );
+          break;
+        case 'path':
+          value = pathParameters ?? {};
+          break;
+        case 'query':
+          value = queryParameters ?? {};
+          break;
+        case 'cookie':
+          value = parseCookies(safeHeaders.cookie) ?? {};
+          break;
+      }
+
+      return { schema, value, type };
+    });
+
+    if (options.groupedParameters.length > 0) {
+      const groupedValidationEntry = validationEntries
+        .filter(({ type }) => options.groupedParameters.includes(type))
+        .reduce(
+          (acc, { value, schema }) => {
+            acc.schema.required = [
+              ...(acc.schema.required ?? []),
+              ...(schema.required ?? []),
+            ];
+            acc.schema.properties = {
+              ...acc.schema.properties,
+              ...schema.properties,
+            };
+            acc.value = { ...acc.value, ...value };
+
+            return acc;
+          },
+          {
+            value: {},
+            schema: {
+              type: 'object',
+              required: [],
+              properties: {},
+              additionalProperties: options.allowAdditionalParameters === true,
+            } as JSONSchema7,
+          }
+        );
+
+      const validParams = this.paramAjv.validate(
+        groupedValidationEntry.schema,
+        groupedValidationEntry.value
+      );
+
+      if (!validParams) {
+        return {
+          ok: false,
+          errors: betterAjvErrors({
+            errors: this.paramAjv.errors,
+            data: groupedValidationEntry.value,
+            schema: groupedValidationEntry.schema as any,
+            basePath: 'request.parameters',
+          }),
+        };
+      }
+    }
+
+    for (const { schema, value, type } of validationEntries.filter(
+      ({ type }) => !options.groupedParameters.includes(type)
+    )) {
+      const validParams = this.paramAjv.validate(schema, pathParameters);
+
+      if (!validParams) {
+        return {
+          ok: false,
+          errors: betterAjvErrors({
+            errors: this.paramAjv.errors,
+            data: value,
+            schema: schema as any,
+            basePath: `request.${type}`,
+          }),
+        };
+      }
+    }
+
+    const requestBody = operation.requestBody as
+      | OpenAPIV3.RequestBodyObject
+      | undefined;
+
+    if (requestBody) {
+      const contentType = parseContentType(
+        safeHeaders['content-type'] ?? 'application/json'
+      );
+      const supportedContentTypes = Object.keys(requestBody?.content ?? {});
+
+      if (
+        supportedContentTypes.length === 0 &&
+        !supportedContentTypes.includes('*/*') &&
+        !supportedContentTypes.includes(contentType.mediaType)
+      ) {
+        return {
+          ok: false,
+          errors: [
+            {
+              context: {
+                errorType: 'contentType',
+                supportedContentTypes,
+              } as any,
+              path: 'request.headers.Content-Type',
+              message: `"${contentType.mediaType}" Content-Type is not supported on this endpoint`,
+            },
+          ],
+        };
+      }
+
+      if (body) {
+        const mediaTypeObject =
+          requestBody?.content?.[contentType.mediaType] ??
+          requestBody?.content?.['*/*'];
+        const requestBodySchema = mediaTypeObject?.schema as
+          | OpenAPIV3.SchemaObject
+          | undefined;
+
+        if (requestBodySchema) {
+          const cleanRequestBodySchema = removeReadOnlyProperties(
+            requestBodySchema as JSONSchema7
+          );
+          if (options.partialBody) {
+            delete cleanRequestBodySchema.required;
+          }
+          const validBody = this.bodyAjv.validate(cleanRequestBodySchema, body);
+
+          if (!validBody) {
+            return {
+              ok: false,
+              errors: betterAjvErrors({
+                data: body,
+                schema: cleanRequestBodySchema as any,
+                errors: this.bodyAjv.errors,
+              }),
+            };
+          }
+        }
+      }
+    }
+
+    return { ok: true };
+  }
+}
