@@ -1,0 +1,3 @@
+coverage
+__snapshots__
+*.test.ts
