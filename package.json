@@ -3,10 +3,6 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "engines": {
     "node": ">=10"
   },
@@ -16,6 +12,7 @@
     "test": "tsdx test",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
+    "release": "np",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
