@@ -1,5 +1,4 @@
-import { JSONSchema7 } from 'json-schema';
-import { URLSearchParams } from 'node:url';
+import type { OpenAPIV3 } from 'openapi-types';
 
 export const lowercaseKeys = <T = Record<string, unknown>>(obj: T): T => {
   return Object.fromEntries(
@@ -20,12 +19,11 @@ export const parseCookies = (
 ): Record<string, unknown> | null => {
   if (!cookieHeader) return null;
 
-  const cookieParams = new URLSearchParams(cookieHeader);
-  const cookies: Record<string, unknown> = {};
-
-  for (const [key, value] of cookieParams.entries()) {
-    cookies[key] = value;
-  }
+  const cookies = cookieHeader.split('; ').reduce((prev, current) => {
+    const [name, ...value] = current.split('=');
+    prev[name] = value.join('=');
+    return prev;
+  }, {} as Record<string, unknown>);
 
   return cookies;
 };
@@ -39,17 +37,28 @@ export const parseContentType = (
   return { mediaType, parameters };
 };
 
-export const removeReadOnlyProperties = (schema: JSONSchema7): JSONSchema7 => {
+export const removeReadOnlyProperties = (schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject => {
   if (!schema.properties) {
     return schema;
   }
 
+  schema.required = schema.required?.filter(field => {
+    const prop = schema.properties?.[field];
+    return !(typeof prop === 'object' && (prop as OpenAPIV3.SchemaObject).readOnly);
+  });
+
   schema.properties = Object.fromEntries(
-    Object.entries(schema.properties).map(([key, value]) => [
-      key,
-      typeof value === 'object' && value.readOnly,
-    ])
-  ) as Record<string, JSONSchema7>;
+    Object.entries(schema.properties)
+      .map(([key, value]) => [
+        key,
+        typeof value === 'object' && (value as OpenAPIV3.SchemaObject).readOnly ? null : value,
+      ])
+      .filter(([, value]) => value !== null)
+  ) as Record<string, OpenAPIV3.SchemaObject>;
 
   return schema;
 };
+
+export function isPresent<T>(t: T | undefined | null | void): t is T {
+  return t !== undefined && t !== null;
+}
