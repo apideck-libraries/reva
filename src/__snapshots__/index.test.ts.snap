@@ -1,0 +1,129 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Reva .validate() invalid requests should handle additional parameters (query & path) 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'other' property is not expected to be here",
+      "path": "request.path",
+    },
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'other' property is not expected to be here",
+      "path": "request.query",
+    },
+  ],
+  "ok": false,
+}
+`;
+
+exports[`Reva .validate() invalid requests should handle invalid body 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "required",
+      },
+      "message": "request.body must have required property 'foo'",
+      "path": "request.body",
+    },
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'bar' property is not expected to be here",
+      "path": "request.body",
+    },
+  ],
+  "ok": false,
+}
+`;
+
+exports[`Reva .validate() invalid requests should handle missing required parameters 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "required",
+      },
+      "message": "request.header must have required property 'x-foo'",
+      "path": "request.header",
+    },
+    Object {
+      "context": Object {
+        "errorType": "required",
+      },
+      "message": "request.path must have required property 'id'",
+      "path": "request.path",
+    },
+    Object {
+      "context": Object {
+        "errorType": "required",
+      },
+      "message": "request.query must have required property 'foo'",
+      "path": "request.query",
+    },
+    Object {
+      "context": Object {
+        "errorType": "required",
+      },
+      "message": "request.cookie must have required property 'Foo'",
+      "path": "request.cookie",
+    },
+  ],
+  "ok": false,
+}
+`;
+
+exports[`Reva .validate() invalid requests should handle unsupported Content-Type 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "contentType",
+        "supportedContentTypes": Array [
+          "x-www-form-urlencoded",
+        ],
+      },
+      "message": "\\"application/json\\" Content-Type is not supported.",
+      "path": "request.header.Content-Type",
+    },
+  ],
+  "ok": false,
+}
+`;
+
+exports[`Reva .validate() options allowAdditionalParameters list of parameter types should allow additional parameters of those types 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'other' property is not expected to be here",
+      "path": "request.path",
+    },
+  ],
+  "ok": false,
+}
+`;
+
+exports[`Reva .validate() options groupedParameters should group parameters for validation 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'blah' property is not expected to be here",
+      "path": "request.parameters",
+    },
+  ],
+  "ok": false,
+}
+`;
