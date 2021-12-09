@@ -4,10 +4,10 @@
 
 > Validate requests based on OpenAPI
 
-- TypeScript definitions included
 - Supports all OpenAPI parameters
 - Based on [AJV](https://github.com/ajv-validator/ajv)
 - Readable and helpful errors (by [@apideck/better-ajv-errors](https://github.com/apideck-libraries/better-ajv-errors))
+- High quality TypeScript definitions included
 - Minimal footprint: 42 kB including AJV (gzip + minified)
 
 ## Install
@@ -23,6 +23,8 @@ $ npm i @apideck/reva
 ```
 
 ## Usage
+
+Create a Reva instance and call the `validate` method with your [OpenAPI operation](https://spec.openapis.org/oas/v3.1.0#operation-object) and your request data.
 
 ```ts
 import { Reva } from '@apideck/reva';
@@ -69,19 +71,19 @@ Validate requests based on OpenAPI. Parameter validation uses [type coercion](ht
 **Parameters**
 
 - `options: RevaValidateOptions`
-  - `operation: OpenApiOperation` Your OpenAPI operation object to validate against.
-  - `request: RevaRequest` The request data to validate. All properties are optional.
-    - `queryParameters?: Record<string, unknown>` Query parameters to validate.
-    - `headers?: Record<string, unknown>` Headers to validate.
-    - `pathParameters?: Record<string, unknown>` Path parameters to validate.
-    - `body?: unknown` Request body to validate.
-  - `options?: RevaOptions` Override options set in the Reva constructor.
+  - `operation: OpenApiOperation` Your OpenAPI operation object to validate against
+  - `request: RevaRequest` The request data to validate. All properties are optional
+    - `queryParameters?: Record<string, unknown>` Query parameters to validate
+    - `headers?: Record<string, unknown>` Headers to validate
+    - `pathParameters?: Record<string, unknown>` Path parameters to validate
+    - `body?: unknown` Request body to validate
+  - `options?: RevaOptions` Override options set in the Reva constructor
 
 **Return Value**
 
 - `Result<ValidationError>`
   - `ok: boolean` Indicates if the request is valid or not
-  - `errors?: ValidationError[]` Array of formatted errors. Only populated when Result.ok is `false`
+  - `errors?: ValidationError[]` Array of formatted errors. Only populated when `Result.ok` is `false`
     - `message: string` Formatted error message
     - `suggestion?: string` Optional suggestion based on provided data and schema
     - `path: string` Object path where the error occurred (example: `.foo.bar.0.quz`)
