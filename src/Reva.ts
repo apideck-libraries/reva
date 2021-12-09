@@ -11,8 +11,7 @@ import {
 } from './utils';
 
 type Result<E> = { ok: true } | { ok: false; errors: E[] };
-type Optional<T> = T | null | undefined;
-type ParameterDictionary = Record<string, Optional<string>>;
+type ParameterDictionary = Record<string, unknown>;
 type SchemaByType = Record<string, OpenAPIV3.SchemaObject>;
 
 const OPENAPI_PARAMETER_TYPES = ['header', 'path', 'query', 'cookie'] as const;
@@ -33,8 +32,8 @@ interface OpenApiOperation {
 
 export interface RevaOptions {
   allowAdditionalParameters: true | OpenApiParameterType[];
-  groupedParameters: OpenApiParameterType[];
   partialBody: boolean;
+  groupedParameters: OpenApiParameterType[];
 }
 
 export interface RevaValidateOptions {
@@ -125,7 +124,7 @@ export class Reva {
           value = queryParameters ?? {};
           break;
         case 'cookie':
-          value = parseCookies(safeHeaders.cookie) ?? {};
+          value = parseCookies(safeHeaders.cookie as string) ?? {};
           break;
       }
 
@@ -200,7 +199,7 @@ export class Reva {
 
     if (requestBody) {
       const contentType = parseContentType(
-        safeHeaders['content-type'] ?? 'application/json'
+        (safeHeaders['content-type'] as string) ?? 'application/json'
       );
       const supportedContentTypes = Object.keys(requestBody?.content ?? {});
       const invalidContentType =
