@@ -43,8 +43,12 @@ export interface RevaValidateOptions {
 }
 
 export class Reva {
-  private paramAjv = new Ajv({ allErrors: true, coerceTypes: true });
-  private bodyAjv = new Ajv({ allErrors: true });
+  private paramAjv = new Ajv({
+    allErrors: true,
+    coerceTypes: true,
+    strict: false,
+  });
+  private bodyAjv = new Ajv({ allErrors: true, strict: false });
   private options: RevaOptions = {
     allowAdditionalParameters: ['header', 'cookie'],
     groupedParameters: [],
