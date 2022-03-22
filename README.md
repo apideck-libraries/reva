@@ -2,7 +2,7 @@
 
 # @apideck/reva 🕵
 
-> Validate requests based on OpenAPI
+> Server-side **re**quest **va**lidator for Node.js based on OpenAPI
 
 - Supports all OpenAPI parameters
 - Based on [AJV](https://github.com/ajv-validator/ajv)
@@ -35,8 +35,8 @@ const result = reva.validate({
   operation, // OpenAPI operation
   request: {
     headers: { 'X-My-Header': 'value', Cookie: 'Key=Value' },
-    pathParameters; { id: 'ed55e7a3' },
-    queryParameters; { search: 'foo' },
+    pathParameters: { id: 'ed55e7a3' },
+    queryParameters: { search: 'foo' },
     body: {},
   },
 });
