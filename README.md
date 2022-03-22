@@ -36,8 +36,8 @@ const result = reva.validate({
   request: {
     headers: { 'X-My-Header': 'value', Cookie: 'Key=Value' },
     pathParameters: { id: 'ed55e7a3' },
-    queryParameters: { search: 'foo' },
-    body: {},
+    queryParameters: { order_by: 'created' },
+    body: { name: 'Jane Doe' },
   },
 });
 
@@ -46,6 +46,28 @@ if (result.ok) {
 } else {
   // Invalid request, result.errors contains validation errors
   console.log(result.errors);
+  // {
+  //   "ok": false,
+  //   "errors": [
+  //     {
+  //       "path": "request.query",
+  //       "message": "'order_by' property must be equal to one of the allowed values",
+  //       "suggestion": "Did you mean 'created_at'?",
+  //       "context": { "errorType": "enum", "allowedValues": ["created_at", "updated_at"] }
+  //     },
+  //     {
+  //       "path": "request.header",
+  //       "message": "request.header must have required property 'x-required-header'",
+  //       "context": { "errorType": "required" }
+  //     },
+  //     {
+  //       "path": "request.body",
+  //       "message": "'name' property is not expected to be here",
+  //       "context": { "errorType": "additionalProperties" }
+  //     }
+  //   ]
+  // }
+
 }
 ```
 
