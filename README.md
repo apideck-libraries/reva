@@ -2,7 +2,7 @@
 
 # @apideck/reva 🕵
 
-> Validate requests based on OpenAPI
+> Server-side **re**quest **va**lidator for Node.js based on OpenAPI
 
 - Supports all OpenAPI parameters
 - Based on [AJV](https://github.com/ajv-validator/ajv)
@@ -35,9 +35,9 @@ const result = reva.validate({
   operation, // OpenAPI operation
   request: {
     headers: { 'X-My-Header': 'value', Cookie: 'Key=Value' },
-    pathParameters; { id: 'ed55e7a3' },
-    queryParameters; { search: 'foo' },
-    body: {},
+    pathParameters: { id: 'ed55e7a3' },
+    queryParameters: { order_by: 'created' },
+    body: { name: 'Jane Doe' },
   },
 });
 
@@ -46,6 +46,28 @@ if (result.ok) {
 } else {
   // Invalid request, result.errors contains validation errors
   console.log(result.errors);
+  // {
+  //   "ok": false,
+  //   "errors": [
+  //     {
+  //       "path": "request.query",
+  //       "message": "'order_by' property must be equal to one of the allowed values",
+  //       "suggestion": "Did you mean 'created_at'?",
+  //       "context": { "errorType": "enum", "allowedValues": ["created_at", "updated_at"] }
+  //     },
+  //     {
+  //       "path": "request.header",
+  //       "message": "request.header must have required property 'x-required-header'",
+  //       "context": { "errorType": "required" }
+  //     },
+  //     {
+  //       "path": "request.body",
+  //       "message": "'name' property is not expected to be here",
+  //       "context": { "errorType": "additionalProperties" }
+  //     }
+  //   ]
+  // }
+
 }
 ```
 
