@@ -26,7 +26,7 @@
     "analyze": "size-limit --why"
   },
   "dependencies": {
-    "@apideck/better-ajv-errors": "^0.3.3",
+    "@apideck/better-ajv-errors": "^0.3.4",
     "ajv": "^8.10.0",
     "openapi-types": "^10.0.0"
   },
