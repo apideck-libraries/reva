@@ -1,4 +1,4 @@
-import Ajv from 'ajv';
+import Ajv, { Options as _AjvOptions } from 'ajv';
 import type { OpenAPIV3 } from 'openapi-types';
 import { betterAjvErrors, ValidationError } from '@apideck/better-ajv-errors';
 import {
@@ -9,6 +9,8 @@ import {
   removeReadOnlyProperties,
   tryJsonParse,
 } from './utils';
+
+export type AjvOptions = _AjvOptions;
 
 type Result<E> = { ok: true } | { ok: false; errors: E[] };
 type ParameterDictionary = Record<string, unknown>;
@@ -34,6 +36,8 @@ export interface RevaOptions {
   allowAdditionalParameters: true | OpenApiParameterType[];
   partialBody: boolean;
   groupedParameters: OpenApiParameterType[];
+  paramAjvOptions?: AjvOptions;
+  bodyAjvOptions?: AjvOptions;
 }
 
 export interface RevaValidateOptions {
@@ -42,13 +46,16 @@ export interface RevaValidateOptions {
   options?: Partial<RevaOptions>;
 }
 
+export const revaDefaultParamAjvOptions = {
+  allErrors: true,
+  coerceTypes: true,
+  strict: false,
+};
+export const revaDefaultBodyAjvOptions = { allErrors: true, strict: false };
+
 export class Reva {
-  private paramAjv = new Ajv({
-    allErrors: true,
-    coerceTypes: true,
-    strict: false,
-  });
-  private bodyAjv = new Ajv({ allErrors: true, strict: false });
+  private paramAjv: Ajv;
+  private bodyAjv: Ajv;
   private options: RevaOptions = {
     allowAdditionalParameters: ['header', 'cookie'],
     groupedParameters: [],
@@ -57,6 +64,14 @@ export class Reva {
 
   constructor(options: Partial<RevaOptions> = {}) {
     this.options = { ...this.options, ...options };
+    this.paramAjv = new Ajv({
+      ...revaDefaultParamAjvOptions,
+      ...options.paramAjvOptions,
+    });
+    this.bodyAjv = new Ajv({
+      ...revaDefaultBodyAjvOptions,
+      ...options.bodyAjvOptions,
+    });
   }
 
   validate({
