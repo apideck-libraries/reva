@@ -85,6 +85,8 @@ Reva is the main **Re**quest **va**lidation class. You can optionally pass optio
   - `allowAdditionalParameters?: true | OpenApiParameterType[]` Allow additional parameters to be passed that are not defined in the OpenAPI operation. Use `true` to allow all parameter types to have additional parameters. Default value: `['header', 'cookie']`
   - `partialBody?: boolean` Ignore required properties on the requestBody. This option is useful for update endpoints where a subset of required properties is allowed. Default value: `false`
   - `groupedParameters?: OpenApiParameterType[]` Validate multiple OpenAPI parameter types as one schema. This is useful for APIs where parameters (`query`,`path`, etc) are combined into a single `parameters` object. Default value: `[]`
+  - `paramAjvOptions?: AjvOptions` Custom AJV options for request param validation.
+  - `bodyAjvOptions?: AjvOptions` Custom AJV options for request body validation.
 
 #### reva.validate(options: RevaValidateOptions)
 
