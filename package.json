@@ -21,7 +21,7 @@
     "test": "tsdx test",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
-    "release": "np",
+    "release": "np --no-publish && npm publish --access public --registry https://registry.npmjs.org",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
@@ -74,9 +74,5 @@
   },
   "resolutions": {
     "prettier": "^2.3.0"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org",
-    "access": "public"
   }
 }
