@@ -378,6 +378,53 @@ describe('Reva', () => {
         expect(result.ok).toBe(false);
         expect(result).toMatchSnapshot();
       });
+
+      it('should handle invalid readonly props', () => {
+        const reva = new Reva();
+        const result = reva.validate({
+          operation: {
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['foo'],
+                    additionalProperties: false,
+                    properties: {
+                      foo: {
+                        type: 'string',
+                      },
+                      hello: {
+                        type: 'object',
+                        additionalProperties: false,
+                        properties: {
+                          world: {
+                            type: 'string',
+                            readOnly: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          request: {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: {
+              foo: 'value',
+              hello: {
+                world: 'value',
+              },
+            },
+          },
+        });
+        expect(result.ok).toBe(false);
+        expect(result).toMatchSnapshot();
+      });
     });
 
     describe('options', () => {

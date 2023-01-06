@@ -44,6 +44,21 @@ Object {
 }
 `;
 
+exports[`Reva .validate() invalid requests should handle invalid readonly props 1`] = `
+Object {
+  "errors": Array [
+    Object {
+      "context": Object {
+        "errorType": "additionalProperties",
+      },
+      "message": "'world' property is not expected to be here",
+      "path": "request.body.hello",
+    },
+  ],
+  "ok": false,
+}
+`;
+
 exports[`Reva .validate() invalid requests should handle missing required parameters 1`] = `
 Object {
   "errors": Array [
