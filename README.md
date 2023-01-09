@@ -1,4 +1,4 @@
-[![npm (scoped)](https://img.shields.io/npm/v/@apideck/reva?color=brightgreen)](https://npmjs.com/@apideck/reva) [![npm](https://img.shields.io/npm/dm/@apideck/reva)](https://npmjs.com/@apideck/reva) [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/apideck-libraries/reva/CI)](https://github.com/apideck-libraries/reva/actions/workflows/main.yml?query=branch%3Amain++)
+[![npm (scoped)](https://img.shields.io/npm/v/@apideck/reva?color=brightgreen)](https://npmjs.com/@apideck/reva) [![npm](https://img.shields.io/npm/dm/@apideck/reva)](https://npmjs.com/@apideck/reva) [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/apideck-libraries/reva/main.yml?branch=main)](https://github.com/apideck-libraries/reva/actions/workflows/main.yml?query=branch%3Amain++)
 
 # @apideck/reva 🕵
 
