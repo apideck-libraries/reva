@@ -1,6 +1,10 @@
 import type { OpenAPIV3 } from 'openapi-types';
 
-export const lowercaseKeys = <T = Record<string, unknown>>(obj: T): T => {
+export const lowercaseKeys = <
+  T extends Record<string, unknown> = Record<string, unknown>
+>(
+  obj: T
+): T => {
   return Object.fromEntries(
     Object.entries(obj).map(([key, value]) => [key.toLowerCase(), value])
   ) as T;
@@ -55,12 +59,23 @@ export const removeReadOnlyProperties = (
 
   schema.properties = Object.fromEntries(
     Object.entries(schema.properties)
-      .map(([key, value]) => [
-        key,
-        typeof value === 'object' && (value as OpenAPIV3.SchemaObject).readOnly
-          ? null
-          : value,
-      ])
+      .map(([key, value]) => {
+        if (typeof value !== 'object') {
+          return [key, value];
+        }
+
+        const schemaObject = value as OpenAPIV3.SchemaObject;
+
+        if (schemaObject.readOnly) {
+          return [key, null];
+        }
+
+        if (schemaObject.type === 'object') {
+          return [key, removeReadOnlyProperties(schemaObject)];
+        }
+
+        return [key, value];
+      })
       .filter(([, value]) => value !== null)
   ) as Record<string, OpenAPIV3.SchemaObject>;
 
